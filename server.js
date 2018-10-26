@@ -18,7 +18,7 @@ app.use(express.static('public'));
 /* 유저 변수 초기화 */
 var car_id = 0, round_cnt = 0, ultra_dec_vals = 0;
 var linear_out_of_line = 0, nlinear_out_of_line = 0;
-var isStart = false, score = 0;
+var isStart = false, isDetection = false, score = 0;
 
 var lap_timer_thread, lap_minutes = 0, lap_seconds = 0;
 var linear_out_timer_thread, linear_out_seconds = 0;
@@ -265,7 +265,7 @@ function getRoundCount() {
  * 현재 트랙 주행 횟수를 rVals 만큼 더하기 위해 존재하는 함수
  **/
 function additionRound(rVals) {
-    round_cnt += 1;
+    round_cnt += rVals;
 }
 
 /**
@@ -416,32 +416,32 @@ app.post('/outline_detect', (req, res) => {
         }
     } else if (status == 2) { /* status 2 : 직선 이탈 횟수 업데이트 - 타이머 시작 */
         if (isLaserDectetor(device_id)) {
-            if (Console_DEBUG) {
-                console.log("DEVICE_ID : " + device_id);
-                console.log("STATUS : " + status);
-                console.log("LINEAR_OUT_OF_LINE TIMER START");
-            }
-            startLinearOutTimer();
-        }
-    } else if (status == 3) { /* status 3 : 직선 이탈 횟수 업데이트 - 타이머 종료 */
-        if (isLaserDectetor(device_id)) {
-            try {
+            if (isDetection == false) {
                 if (Console_DEBUG) {
                     console.log("DEVICE_ID : " + device_id);
                     console.log("STATUS : " + status);
                     console.log("LINEAR_OUT_OF_LINE TIMER START");
                 }
-                clearLinearOutTimer();
-            } finally {
-                /* 라인을 물면서 운행한 시간을 반환 */
-                getLinearOutVals();
+                startLinearOutTimer();
+            } else {
+                try {
+                    if (Console_DEBUG) {
+                        console.log("DEVICE_ID : " + device_id);
+                        console.log("STATUS : " + status);
+                        console.log("LINEAR_OUT_OF_LINE TIMER START");
+                    }
+                    clearLinearOutTimer();
+                } finally {
+                    /* 라인을 물면서 운행한 시간을 반환 */
+                    getLinearOutVals();
 
-                /* 직선 이탈 횟수 데이터베이스 업데이트 */
-                additionLinearOutline(1);
-                updateLinearOutline_DB();
+                    /* 직선 이탈 횟수 데이터베이스 업데이트 */
+                    additionLinearOutline(1);
+                    updateLinearOutline_DB();
 
-                /* 라인을 물면서 운행한 시간 삭제 */
-                clearLinearOutVals();
+                    /* 라인을 물면서 운행한 시간 삭제 */
+                    clearLinearOutVals();
+                }
             }
         }
     }
@@ -453,7 +453,7 @@ app.post('/data_add', (req, res) => {
     challenge_data = req.body;
     inrt_sql = "INSERT INTO kesl_raspberry (`car_id`, `university_name`, `team_name`, `score`, `linear_out_of_line`, `nlinear_out_of_line`, `check_point_1`, `check_point_2`, `check_point_3`) VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?)";
     params = [challenge_data.car_id, challenge_data.school, challenge_data.team, 0, 0, 0, '', '', ''];
-
+    6
     /* <2018/10/26> 데이터를 추가할 때, car_id 가 지정 되도록 수정 */
     car_id = challenge_data.car_id;
 
