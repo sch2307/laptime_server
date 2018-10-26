@@ -46,7 +46,14 @@ function clearLinearOutTimer() {
 }
 
 /**
- * 직선 코스 초를 측정한 변수 초기화
+ * 직선 코스 초를 측정한 변수를 반환하는 함수
+ **/
+function getLinearOutVals() {
+    return linear_out_seconds;
+}
+
+/**
+ * 직선 코스 초를 측정한 변수를 초기화하는 함수
  **/
 function clearLinearOutVals() {
     linear_out_seconds = 0;
@@ -383,6 +390,7 @@ app.post('/starter_detect', (req, res) => {
         /* 트랙 주행시 마다, 점수 현황 업데이트 */
         updateScore_DB();
     }
+    syncDatabases()
 });
 
 app.post('/outline_detect', (req, res) => {
@@ -425,19 +433,24 @@ app.post('/outline_detect', (req, res) => {
                 }
                 clearLinearOutTimer();
             } finally {
-                additionLinearOutline(1);
+                /* 라인을 물면서 운행한 시간을 반환 */
+                getLinearOutVals();
 
+                /* 직선 이탈 횟수 데이터베이스 업데이트 */
+                additionLinearOutline(1);
                 updateLinearOutline_DB();
-            
+
+                /* 라인을 물면서 운행한 시간 삭제 */
                 clearLinearOutVals();
             }
         }
     }
+    syncDatabases();
     res.send();
  });
 
 app.post('/data_add', (req, res) => {
-	challenge_data = req.body;
+    challenge_data = req.body;
     inrt_sql = "INSERT INTO kesl_raspberry (`car_id`, `university_name`, `team_name`, `score`, `linear_out_of_line`, `nlinear_out_of_line`, `check_point_1`, `check_point_2`, `check_point_3`) VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?)";
     params = [challenge_data.car_id, challenge_data.school, challenge_data.team, 0, 0, 0, '', '', ''];
 
@@ -445,16 +458,17 @@ app.post('/data_add', (req, res) => {
     car_id = challenge_data.car_id;
 
     connection.query(inrt_sql, params, (error, rows, fields) => {
-		if(!error) {
-			if (Console_DEBUG) {
-				console.log(rows.insertId);
-			}
-		} else {
-			if (Console_DEBUG) {
-				console.log(error);
-			}
-		}
+        if (!error) {
+            if (Console_DEBUG) {
+                console.log(rows.insertId);
+            }
+        } else {
+            if (Console_DEBUG) {
+                console.log(error);
+            }
+        }
     });
+    syncDatabases();
     res.send();
 });
 
@@ -473,7 +487,8 @@ app.post('/data_delete', (req, res) => {
 				console.log(error);
 			}
 		}
-	});
+    });
+    syncDatabases();
     res.send();
 });
 
