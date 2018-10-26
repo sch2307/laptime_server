@@ -21,27 +21,19 @@
 
 DROP TABLE IF EXISTS `kesl_raspberry`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
- SET character_set_client = utf8 ;
+ SET character_set_client = utf8mb4 ;
 CREATE TABLE `kesl_raspberry` (
-  `nodeid` int(11) NOT NULL,
-  `cp_cnt` int(4) NOT NULL,
-  `1_check_point` varchar(10) NOT NULL,
-  `2_check_point` varchar(10) NOT NULL,
-  `3_check_point` varchar(10) NOT NULL,
-  `4_check_point` varchar(10) NOT NULL,
-  `5_check_point` varchar(10) NOT NULL,
-  `6_check_point` varchar(10) NOT NULL,
-  `7_check_point` varchar(10) NOT NULL,
-  `8_check_point` varchar(10) NOT NULL,
-  `9_check_point` varchar(10) NOT NULL,
-  `10_check_point` varchar(10) NOT NULL,
-  `11_check_point` varchar(10) NOT NULL,
-  `12_check_point` varchar(10) NOT NULL,
-  `13_check_point` varchar(10) NOT NULL,
-  `14_check_point` varchar(10) NOT NULL,
-  `15_check_point` varchar(10) NOT NULL,
-  PRIMARY KEY (`nodeid`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci;
+  `car_id` int(4) NOT NULL,
+  `university_name` varchar(30) NOT NULL,
+  `team_name` varchar(30) NOT NULL,
+  `score` int(10) NOT NULL,
+  `linear_out_of_line` int(4) NOT NULL,
+  `nlinear_out_of_line` int(4) NOT NULL,
+  `check_point_1` varchar(20) NOT NULL,
+  `check_point_2` varchar(20) NOT NULL,
+  `check_point_3` varchar(20) NOT NULL,
+  PRIMARY KEY (`car_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -62,4 +54,4 @@ UNLOCK TABLES;
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
--- Dump completed on 2018-09-20 10:28:54
+-- Dump completed on 2018-10-26 20:06:23
