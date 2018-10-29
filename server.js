@@ -23,6 +23,8 @@ var isStart = false, isDetection = false, score = 0;
 var lap_timer_thread, lap_minutes = 0, lap_seconds = 0;
 var linear_out_timer_thread, linear_out_seconds = 0;
 
+var isComplete = false;
+
 /* 웹에 표시할 데이터 집합 어레이 */
 var user_data_array = new Array();
 
@@ -106,7 +108,7 @@ function isStartDectector(currentDeviceNum) {
 
 function isLaserDectetor(currentDeviceNum) {
     /* 레이저 감지기의 장치 번호는 1번부터 6번으로 지정 */
-    if (currentDeviceNum > 0 && currentDeviceNum <= 6) {
+    if (currentDeviceNum > 0 && currentDeviceNum <= 2) {
         return true;
     } else {
         return false;
@@ -115,7 +117,7 @@ function isLaserDectetor(currentDeviceNum) {
 
 function isUltraDetector(currentDeviceNum) {
     /* 울트라 감지기의 장치 번호는 7번부터 11번으로 지정 */
-    if (currentDeviceNum > 6 && currentDeviceNum <= 11) {
+    if (currentDeviceNum > 2 && currentDeviceNum <= 6) {
         return true;
     } else {
         return false;
@@ -136,6 +138,13 @@ function checkNextUltraDetector(currentDeviceNum) {
   **/
 function additionUltradec(uVals) {
     ultra_dec_vals += uVals;
+}
+
+/**
+  * ultra_dec_vals 값을 초기화하는 함수
+  **/
+function resetUltraDec() {
+    ultra_dec_vals = 3;
 }
 
 /**
@@ -193,13 +202,13 @@ function syncDatabases() {
 /**
  * 차량이 새롭게 주행할 때, 관련 변수를 초기화하기 위해 존재하는 함수
  **/
-function reConfiguration(isStart) {
-    if (isStart == true) {
+function reConfiguration(letStart) {
+    if (letStart == true) {
         /* 현재 차량이 트랙을 주행한 횟수를 초기화 합니다 */
         round_cnt = 1;
 
         /* 다음 감지해야 할 장치번호를 초기화 합니다 */
-        ultra_dec_vals = 7;
+        resetUltraDec();
 
         /* 현재 팀의 점수 현황을 초기화 합니다 */
         score = 0;
@@ -209,6 +218,12 @@ function reConfiguration(isStart) {
 
         /* 현재 팀의 직선 이탈 횟수를 초기화 합니다 */
         linear_out_of_line = 0;
+
+        /* 라운드 완주 상태를 초기화 합니다 */
+        isComplete = false;
+
+        /* 차량 상태를 '주행'으로 변경합니다 */
+        isStart = true;
 
         /* 타이머를 초기화 합니다 */
         clearLapTimer();
@@ -239,7 +254,7 @@ function subScore(scVals) {
  * 현재 스코어를 데이터베이스로 업데이트하기 위해 존재하는 함수
  **/
 function updateScore_DB() {
-    inrt_sql = 'UPDATE kesl_raspberry SET `check_point_' + (ultra_dec_vals) + '` = ? WHERE `car_id` = ' + car_id;
+    inrt_sql = 'UPDATE kesl_raspberry SET `score` = ? WHERE `car_id` = ' + car_id;
     params = [score];
     connection.query(inrt_sql, params, (error, rows, fields) => {
         if (!error) {
@@ -258,7 +273,7 @@ function updateScore_DB() {
  * 현재 트랙 주행 횟수를 반환하기 위해 존재하는 함수
  **/
 function getRoundCount() {
-    return round_cnt();
+    return round_cnt > 3 ? 3 : round_cnt;
 }
 
 /**
@@ -274,6 +289,7 @@ function additionRound(rVals) {
 function updateTimeTable() {
     inrt_sql = 'UPDATE kesl_raspberry SET `check_point_' + (getRoundCount()) + '` = ? WHERE `car_id` = ' + car_id;
     params = [getTime()];
+    console.log(getTime());
     connection.query(inrt_sql, params, (error, rows, fields) => {
         if (!error) {
             if (Console_DEBUG) {
@@ -305,8 +321,8 @@ function additionLinearOutline(lVals) {
  * 직선 구간의 이탈 횟수를 데이터베이스로 업데이트 하기 위한 함수
  **/
 function updateLinearOutline_DB(device_id) {
-    if (isLaserDectetor(device_id)) {
-        inrt_sql = 'UPDATE kesl_raspberrdy SET `linear_out_of_line` = ? WHERE `car_id` = ' + car_id;
+    //if (isLaserDectetor(device_id)) {
+        inrt_sql = 'UPDATE kesl_raspberry SET `linear_out_of_line` = ? WHERE `car_id` = ' + car_id;
         params = [getLinearOutline()];
         connection.query(inrt_sql, params, (error, rows, fields) => {
             if (!error) {
@@ -319,7 +335,7 @@ function updateLinearOutline_DB(device_id) {
                 }
             }
         });
-    }
+    //}
 }
 
 /**
@@ -340,8 +356,8 @@ function additionnLinearOutline(nlVals) {
  * 곡선 구간의 이탈 횟수를 데이터베이스로 업데이트 하기 위한 함수
 **/
 function updatenLinearOutline_DB(device_id) {
-    if (isLaserDectetor(device_id)) {
-        inrt_sql = 'UPDATE kesl_raspberrdy SET `nlinear_out_of_line` = ? WHERE `car_id` = ' + car_id;
+    //if (isUltraDetector(device_id)) {
+        inrt_sql = 'UPDATE kesl_raspberry SET `nlinear_out_of_line` = ? WHERE `car_id` = ' + car_id;
         params = [getnLinearOutline()];
         connection.query(inrt_sql, params, (error, rows, fields) => {
             if (!error) {
@@ -354,7 +370,7 @@ function updatenLinearOutline_DB(device_id) {
                 }
             }
         });
-    }
+   // }
 }
 
 app.get('/get_json_data', (req, res) => {
@@ -365,7 +381,7 @@ app.get('/get_json_data', (req, res) => {
 });
 
 app.post('/starter_detect', (req, res) => {
-    res.writeHead(200, { "Content-Type:": "application/json" });
+    res.writeHead(200, { "Content-Type" : "application/json" });
     var jsonObj = req.body;
     var device_id = jsonObj.device_id;
     var status = jsonObj.status;
@@ -374,33 +390,40 @@ app.post('/starter_detect', (req, res) => {
         if (isStart == false) { /* 차량 시작 상태가 아닌 경우 */
             reConfiguration(true);
         } else { /* 이미 시작한 상태 */
-            if (round_cnt > 1 && round_cnt <= 3) { /* 트랙 주행 횟수가 1 ~ 3회 이하 */
-                updateTimeTable();
-                additionRound(1);
-            } else if (round_cnt > 3) {/* 트랙 주행 횟수가 3회를 초과할 경우 */
-                if (status == 1) { /* status 1 : 정지 지점에 3초 간 정지를 성공 */
-                    additionScore(10);
-                } else { /* status 0 : 정지 지점에 3초 간 정지를 실패 */
-                    subScore(10);
+            if (isComplete == true) { /* 트랙 주행을 완료한 상태인 경우 */
+                if (round_cnt >= 1 && round_cnt <= 3) { /* 트랙 주행 횟수가 1 ~ 3회 이하 */
+                    updateTimeTable();
+                    additionRound(1);
+                    resetUltraDec();
+                } else if (round_cnt > 3) {/* 트랙 주행 횟수가 3회를 초과할 경우 */
+                    if (status == 1) { /* status 1 : 정지 지점에 3초 간 정지를 성공 */
+                        additionScore(10);
+                    } else { /* status 0 : 정지 지점에 3초 간 정지를 실패 */
+                        subScore(10);
+                    }
+                    /* 차량 주행 완료 */
+                    reConfiguration(false);
                 }
-                /* 차량 주행 완료 */
-                reConfiguration(false);
+                isComplete = false;
             }
         }
         /* 트랙 주행시 마다, 점수 현황 업데이트 */
         updateScore_DB();
     }
     syncDatabases()
+    res.send();
 });
 
 app.post('/outline_detect', (req, res) => {
-    res.writeHead(200, { "Content-Type": "application/json" });
+    res.writeHead(200, { "Content-Type" : "application/json" });
 
     var jsonObj = req.body;
     var device_id = jsonObj.device_id;
     var status = jsonObj.status;
 
     if (status == 1) { /* status 1 : 곡선 이탈 횟수 업데이트 */
+        console.log("is ULTRA DETECT : " + device_id);
+        console.log("is NEXT LASER DETECT : " + ultra_dec_vals);
         if (isUltraDetector(device_id) && checkNextUltraDetector(device_id)) {
             try {
                 if (Console_DEBUG) {
@@ -416,33 +439,47 @@ app.post('/outline_detect', (req, res) => {
         }
     } else if (status == 2) { /* status 2 : 직선 이탈 횟수 업데이트 - 타이머 시작 */
         if (isLaserDectetor(device_id)) {
-            if (isDetection == false) {
-                if (Console_DEBUG) {
-                    console.log("DEVICE_ID : " + device_id);
-                    console.log("STATUS : " + status);
-                    console.log("LINEAR_OUT_OF_LINE TIMER START");
-                }
-                startLinearOutTimer();
-            } else {
-                try {
-                    if (Console_DEBUG) {
-                        console.log("DEVICE_ID : " + device_id);
-                        console.log("STATUS : " + status);
-                        console.log("LINEAR_OUT_OF_LINE TIMER START");
-                    }
-                    clearLinearOutTimer();
-                } finally {
-                    /* 라인을 물면서 운행한 시간을 반환 */
-                    getLinearOutVals();
+            if (Console_DEBUG) {
+                console.log("DEVICE_ID : " + device_id);
+                console.log("STATUS : " + status);
+                console.log("LINEAR_OUT_OF_LINE DETECTION");
 
-                    /* 직선 이탈 횟수 데이터베이스 업데이트 */
-                    additionLinearOutline(1);
-                    updateLinearOutline_DB();
-
-                    /* 라인을 물면서 운행한 시간 삭제 */
-                    clearLinearOutVals();
-                }
+                additionLinearOutline(1);
+                updateLinearOutline_DB();
             }
+        }
+        //if (isLaserDectetor(device_id)) {
+        //    if (isDetection == false) {
+        //        if (Console_DEBUG) {
+        //            console.log("DEVICE_ID : " + device_id);
+        //            console.log("STATUS : " + status);
+        //            console.log("LINEAR_OUT_OF_LINE TIMER START");
+        //        }
+        //        startLinearOutTimer();
+        //    } else {
+        //        try {
+        //            if (Console_DEBUG) {
+        //                console.log("DEVICE_ID : " + device_id);
+        //                console.log("STATUS : " + status);
+        //                console.log("LINEAR_OUT_OF_LINE TIMER START");
+        //            }
+        //            clearLinearOutTimer();
+        //        } finally {
+        //            /* 라인을 물면서 운행한 시간을 반환 */
+        //            getLinearOutVals();
+
+        //            /* 직선 이탈 횟수 데이터베이스 업데이트 */
+        //            additionLinearOutline(1);
+        //            updateLinearOutline_DB();
+
+        //            /* 라인을 물면서 운행한 시간 삭제 */
+        //            clearLinearOutVals();
+        //        }
+        //    }
+        // }
+    } else if (status == 3) { /* 마지막 체크 포인트 주행 완료 */
+        if (isComplete == false) {
+            isComplete = true;
         }
     }
     syncDatabases();
@@ -453,9 +490,10 @@ app.post('/data_add', (req, res) => {
     challenge_data = req.body;
     inrt_sql = "INSERT INTO kesl_raspberry (`car_id`, `university_name`, `team_name`, `score`, `linear_out_of_line`, `nlinear_out_of_line`, `check_point_1`, `check_point_2`, `check_point_3`) VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?)";
     params = [challenge_data.car_id, challenge_data.school, challenge_data.team, 0, 0, 0, '', '', ''];
-    6
+    
     /* <2018/10/26> 데이터를 추가할 때, car_id 가 지정 되도록 수정 */
     car_id = challenge_data.car_id;
+    console.log(car_id);
 
     connection.query(inrt_sql, params, (error, rows, fields) => {
         if (!error) {
