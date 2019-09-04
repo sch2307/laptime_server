@@ -23,16 +23,15 @@ DROP TABLE IF EXISTS `kesl_raspberry`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
  SET character_set_client = utf8mb4 ;
 CREATE TABLE `kesl_raspberry` (
-  `car_id` int(4) NOT NULL,
+  `vehicleID` int(4) NOT NULL,
   `university_name` varchar(30) NOT NULL,
   `team_name` varchar(30) NOT NULL,
-  `score` int(10) NOT NULL,
+  `scoreSum` int(10) NOT NULL,
   `linear_out_of_line` int(4) NOT NULL,
-  `nlinear_out_of_line` int(4) NOT NULL,
   `check_point_1` varchar(20) NOT NULL,
   `check_point_2` varchar(20) NOT NULL,
   `check_point_3` varchar(20) NOT NULL,
-  PRIMARY KEY (`car_id`)
+  PRIMARY KEY (`vehicleID`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
