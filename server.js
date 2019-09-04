@@ -346,12 +346,11 @@ app.post('/starter_detect', (req, res) => {
   if (getCarStatus() === 0) { /* 차량 아이들링 */
     initialize();
   } else { /* 이미 시작한 상태 */
-    if (getCarStatus() === 3) { /* 트랙 주행을 완료한 상태 */
-      
-      if (roundCount >= 1 && roundCount <= 3) { /* 트랙 주행 횟수 1 ~ 3회 이하 */
+    if (getCarStatus() !== 3) { /* 트랙 주행을 완료한 상태 */
+      if (getRoundCount() >= 1 && getRoundCount() <= 3) { /* 트랙 주행 횟수 1 ~ 3회 이하 */
         updateTimeTable();
         additionRound(1);
-      } else if (roundCount > 3) { /* 트랙 주행 횟수가 3회를 초과할 경우 */
+      } else if (getRoundCount() > 3) { /* 트랙 주행 횟수가 3회를 초과할 경우 */
         if (status === 1) { /* status 1 : 정지 지점에 3초 간 정지를 성공 */
           additionScore(10);
         } else { /* status 0 : 정지 지점에 3초 간 정지를 실패 */
@@ -362,7 +361,6 @@ app.post('/starter_detect', (req, res) => {
       }
       setCarStatus(0);
     }
-    
     /* 트랙 주행시 마다, 점수 현황 업데이트 */
     updateScore_DB();
   }
